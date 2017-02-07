@@ -301,7 +301,7 @@ int main(int argc, char *argv[]) {
   int opencl_platform = 0;
   int opencl_device_count = 0;
   int force_cpu_ext = -1;
-  int opencl_t = 0;
+  /*int opencl_t = 0;*/
 
   for (int i = 1; i < argc; ++i) {
     if (argv[i][0] != '-')
@@ -371,7 +371,7 @@ int main(int argc, char *argv[]) {
     //			try
     //			{
     //				opencl_enabled[opencl_device_count] =
-    //std::stol(argv[++i]);
+    // std::stol(argv[++i]);
     //				++opencl_device_count;
     //			}
     //			catch (...)

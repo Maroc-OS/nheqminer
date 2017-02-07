@@ -1,9 +1,15 @@
 project(nheqminer)
+set(APPLICATION_NAME "nheqminer")
+
 cmake_minimum_required(VERSION 3.5)
+set(CMAKE_COLOR_MAKEFILE ON)
 
-# Lot of things has to be properly fixed/added or removed, this needs clean up.
+## Extra cmake files
+set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/Modules/")
 
-set(CMAKE_CXX_FLAGS "-fPIC -DCURVE_ALT_BN128 -D__STDC_FORMAT_MACROS -std=c++1z ${CMAKE_CXX_FLAGS} -Wall -Wextra -Wformat -Wformat-security -Wno-unused-parameter -Wno-self-assign -pipe -g -Wstack-protector -fstack-protector-all -fPIE -fvisibility=hidden -fvisibility-inlines-hidden -DSTATIC") #  -Wall
+## Lot of things has to be properly fixed/added or removed, this needs clean up.
+
+set(CMAKE_CXX_FLAGS "-std=c++1z ${CMAKE_CXX_FLAGS} -Wall -Wextra -Wformat -Wformat-security -Wno-unused-parameter -pipe -g -Wstack-protector -fstack-protector-all -fPIE -fvisibility=hidden -fvisibility-inlines-hidden -DSTATIC")
 
 ## Enable solvers here
 #### older slower
@@ -34,24 +40,19 @@ endif()
 ########
 # LINUX
 if(CMAKE_COMPILER_IS_GNUCXX)
-#    # use native cpu features
-#    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -march=native -fPIC")
-#    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -march=native -fPIC")
+  # use native cpu features
+  set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -march=native -fPIC")
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -march=native -fPIC")
 
-#    # optimizations
-#    add_definitions(-O3)
-
-    # use
-    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -m64 -msse2")
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -m64 -msse2")
-    # optimizations
-    add_definitions(-Ofast)
+  # optimizations
+  add_definitions(-g3 -Ofast)
 endif()
-
+########
+# AppleClang
 if (CMAKE_CXX_COMPILER_ID MATCHES "Clang")
     # use native cpu features
-    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -march=native -fPIC")
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -march=native -fPIC")
+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wno-self-assign -march=native -fPIC")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-self-assign -march=native -fPIC")
 
     # optimizations
     add_definitions(-g3 -Ofast)
@@ -61,21 +62,40 @@ endif()
 include_directories(${nheqminer_SOURCE_DIR}/nheqminer)
 
 # BOOST
-find_package(Threads REQUIRED COMPONENTS)
+set(CMAKE_FIND_LIBRARY_SUFFIXES ".a")
+set(BUILD_SHARED_LIBRARIES OFF)
+
+find_library(SSL_LIB libssl.a REQUIRED)
+find_library(CRYPTO_LIB libcrypto.a REQUIRED)
+
+set(sodium_USE_STATIC_LIBS ON)
+find_package(sodium REQUIRED)
+if (sodium_FOUND)
+  include_directories(SYSTEM ${sodium_INCLUDE_DIR})
+  link_directories(${sodium_LIBRARY_DIRS})
+else ()
+  message("-- sodium NOT FOUND")
+endif ()
+
+set(Threads_USE_STATIC_LIBS ON)
+find_package(Threads REQUIRED)
+if (Threads_FOUND)
+  include_directories(SYSTEM ${Threads_INCLUDE_DIR})
+  link_directories(${Threads_LIBRARY_DIRS})
+else ()
+  message("-- Threads NOT FOUND")
+endif ()
+
 # compile boost staticaly
 set(Boost_USE_STATIC_LIBS ON)
-set(CMAKE_FIND_LIBRARY_SUFFIXES ".a")
-#set(BUILD_SHARED_LIBRARIES OFF)
-set(CMAKE_EXE_LINKER_FLAGS "-std=c++1z -lpthread -lboost_log_setup-mt -lboost_log-mt -lboost_date_time-mt -lboost_filesystem-mt -lboost_thread-mt -lboost_regex-mt -lboost_chrono-mt -lboost_atomic-mt -lboost_system-mt -lcrypto -lsodium")
-find_package(Boost REQUIRED COMPONENTS system log_setup log date_time filesystem thread)
-
+find_package(Boost REQUIRED COMPONENTS log_setup log date_time filesystem thread regex chrono atomic system)
 if (Boost_FOUND)
   # From the offical documentation:
   # Add include directories to the build. [...] If the SYSTEM option is given,
   # the compiler will be told the directories are meant as system include
   # directories on some platforms (signalling this setting might achieve effects
   # such as the compiler skipping warnings [...])."
-  include_directories (SYSTEM ${Boost_INCLUDE_DIR})
+  include_directories(SYSTEM ${Boost_INCLUDE_DIR})
 
   # From the offical documentation:
   # "Specify directories in which the linker will look for libraries. [...] Note
@@ -83,9 +103,9 @@ if (Boost_FOUND)
   # find_package() and find_library() are absolute paths. Pass these absolute
   # library file paths directly to the target_link_libraries() command. CMake
   # will ensure the linker finds them."
-  link_directories (${Boost_LIBRARY_DIRS})
+  link_directories(${Boost_LIBRARY_DIRS})
 else()
-    message("Boost_FOUND NOT FOUND")
+    message("-- Boost NOT FOUND")
 endif ()
 
 include_directories(${CMAKE_CURRENT_BINARY_DIR})
@@ -164,8 +184,15 @@ set(SOURCE_FILES
     blake2/blake2-round.h
     )
 
-set(LIBS ${LIBS} ${Threads_LIBRARIES} ${Boost_LIBRARIES})
-#set(LIBS ${LIBS} ${Boost_LIBRARIES})
+if (CMAKE_COMPILER_IS_GNUCXX)
+  set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -std=c++1z -lpthread -lcrypto -lsodium")
+  set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -static -static-libgcc -static-libstdc++")
+endif ()
+if (CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+  set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -std=c++1z -lpthread -lboost_log_setup-mt -lboost_log-mt -lboost_date_time-mt -lboost_filesystem-mt -lboost_thread-mt -lboost_regex-mt -lboost_chrono-mt -lboost_atomic-mt -lboost_system-mt -lcrypto -lsodium")
+  set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS}")
+endif ()
+set(LIBS ${LIBS} ${SSL_LIB} ${CRYPTO_LIB} ${sodium_LIBRARY_RELEASE} ${Threads_LIBRARIES} ${sodium_LIBRARY_RELEASE}  ${Boost_LIBRARIES})
 
 message("-- CXXFLAGS: ${CMAKE_CXX_FLAGS}")
 message("-- LIBS: ${LIBS}")
@@ -183,7 +210,7 @@ if (USE_CUDA_DJEZO)
     add_subdirectory(cuda_djezo)
 endif()
 
-ADD_EXECUTABLE(${PROJECT_NAME} ${SOURCE_FILES})
+add_executable(${PROJECT_NAME} ${SOURCE_FILES})
 
 #target_link_libraries(${PROJECT_NAME} ${LIBS} ${CUDA_LIBRARIES} )
 target_link_libraries(${PROJECT_NAME} ${CMAKE_THREAD_LIBS_INIT} ${LIBS} )

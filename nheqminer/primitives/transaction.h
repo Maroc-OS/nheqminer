@@ -79,7 +79,11 @@ public:
     );
 
     // Verifies that the JoinSplit proof is correct.
-    bool Verify(ZCJoinSplit& params, const uint256& pubKeyHash) const;
+    bool Verify(
+            ZCJoinSplit& params,
+            libzcash::ProofVerifier& verifier,
+            const uint256& pubKeyHash
+    ) const;
 
     // Returns the calculated h_sig
     uint256 h_sig(ZCJoinSplit& params, const uint256& pubKeyHash) const;
@@ -254,7 +258,7 @@ public:
         // to spend something, then we consider it dust.
         // A typical txout is 34 bytes big, and will
         // need a CTxIn of at least 148 bytes to spend:
-        // so dust is a txout less than 546 satoshis 
+        // so dust is a txout less than 546 satoshis
         // with default minRelayTxFee.
         size_t nSize = GetSerializeSize(SER_DISK,0)+148u;
         return 3*minRelayTxFee.GetFee(nSize);

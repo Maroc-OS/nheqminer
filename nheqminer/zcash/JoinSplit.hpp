@@ -35,10 +35,10 @@ class JSOutput {
 public:
     PaymentAddress addr;
     uint64_t value;
-    boost::array<unsigned char, ZC_MEMO_SIZE> memo;
+    boost::array<unsigned char, ZC_MEMO_SIZE> memo = {{0xF6}};  // 0xF6 is invalid UTF8 as per spec, rest of array is 0x00
 
-    JSOutput() { memo = {{ 0xF6 }}; };  // 0xF6 is invalid UTF8 as per spec, rest of array is 0x00
-    JSOutput(PaymentAddress addr, uint64_t value) : addr(addr), value(value) { JSOutput(); }
+    JSOutput();
+    JSOutput(PaymentAddress addr, uint64_t value) : addr(addr), value(value) { }
 
     Note note(const uint252& phi, const uint256& r, size_t i, const uint256& h_sig) const;
 };
@@ -62,6 +62,7 @@ public:
     virtual void saveProvingKey(std::string path) = 0;
     virtual void loadVerifyingKey(std::string path) = 0;
     virtual void saveVerifyingKey(std::string path) = 0;
+    virtual void saveR1CS(std::string path) = 0;
 
     virtual ZCProof prove(
         const boost::array<JSInput, NumInputs>& inputs,
@@ -82,6 +83,7 @@ public:
 
     virtual bool verify(
         const ZCProof& proof,
+        ProofVerifier& verifier,
         const uint256& pubKeyHash,
         const uint256& randomSeed,
         const boost::array<uint256, NumInputs>& hmacs,

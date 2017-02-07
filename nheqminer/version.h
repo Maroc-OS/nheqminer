@@ -34,9 +34,10 @@ static const int BIP0031_VERSION = 60000;
 //! "mempool" command, enhanced "getdata" behavior starts with this version
 static const int MEMPOOL_GD_VERSION = 60002;
 
-#define STANDALONE_MINER_VERSION	"0.5c"
+#define STANDALONE_MINER_NAME     "nheqminer"
+#define STANDALONE_MINER_VERSION  "0.5c"
 
 // uncomment to use with ZCash address
-//#define ZCASH_POOL
+#define ZCASH_POOL
 
 #endif // BITCOIN_VERSION_H

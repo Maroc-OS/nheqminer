@@ -85,7 +85,6 @@ using namespace json_spirit;
 #define CL_WHT  "\x1B[01;37m" /* white */
 #endif
 
-
 typedef struct {
         string host;
         string port;
@@ -131,9 +130,10 @@ private:
     bool m_connected;
     bool m_running = true;
 
-    int    m_retries = 0;
-    int    m_maxRetries;
+    int m_retries = 0;
+    int m_maxRetries;
     int m_worktimeout = 60;
+    int m_zerohash = 0;
 
     string m_response;
 

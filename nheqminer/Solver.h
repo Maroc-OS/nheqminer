@@ -6,8 +6,8 @@ template<typename StaticInterface>
 class Solver : public ISolver
 {
 protected:
+	StaticInterface * const _context = nullptr;
 	const SolverType _type;
-	StaticInterface * const _context = nullptr;	
 public:
 	Solver(StaticInterface *contex, SolverType type) : _context(contex), _type(type){}
 	virtual ~Solver() {

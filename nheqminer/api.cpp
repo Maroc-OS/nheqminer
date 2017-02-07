@@ -170,5 +170,6 @@ bool Client::Parse(const std::string& request)
 		return false;
 	}
 
+	m_socket.close();
 	return true;
 }

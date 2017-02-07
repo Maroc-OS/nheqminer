@@ -14,8 +14,8 @@ enum class SolverType {
 class ISolver
 {
 public:
-	//ISolver() { }
-	//virtual ~ISolver() { }
+	ISolver() { }
+	virtual ~ISolver() { }
 	virtual void start() = 0;
 	virtual void stop() = 0;
 
@@ -31,4 +31,3 @@ public:
 	virtual std::string getname() = 0;
 	virtual SolverType GetType() const = 0;
 };
-

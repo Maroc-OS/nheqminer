@@ -44,6 +44,9 @@
 *.idb
 *.pdb
 
+# Mac OS X Cache files
+.DS_Store
+
 # Kernel Module Compile Results
 *.mod*
 *.cmd
@@ -407,7 +410,7 @@ Makefile*
 
 # QtCtreator CMake
 CMakeLists.txt.user*
-
+CMakeFiles
 0
 
 ####

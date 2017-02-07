@@ -12,16 +12,39 @@
 #include <stdint.h>
 #include <assert.h>
 
-//#include "sodium.h"
+#include "sodium.h"
 #ifdef WIN32
 #include "compat/endian.h"
 #else
-#include <endian.h>
+ #if defined(__APPLE__)
+  #include <machine/endian.h>
+ #else
+  #include <endian.h>
+ #endif
 #endif
 
-//#if defined(NDEBUG)
-//# error "Bitcoin cannot be compiled without assertions."
-//#endif
+#ifdef __APPLE__
+#include <libkern/OSByteOrder.h>
+
+#define htobe16(x) OSSwapHostToBigInt16(x)
+#define htole16(x) OSSwapHostToLittleInt16(x)
+#define be16toh(x) OSSwapBigToHostInt16(x)
+#define le16toh(x) OSSwapLittleToHostInt16(x)
+
+#define htobe32(x) OSSwapHostToBigInt32(x)
+#define htole32(x) OSSwapHostToLittleInt32(x)
+#define be32toh(x) OSSwapBigToHostInt32(x)
+#define le32toh(x) OSSwapLittleToHostInt32(x)
+
+#define htobe64(x) OSSwapHostToBigInt64(x)
+#define htole64(x) OSSwapHostToLittleInt64(x)
+#define be64toh(x) OSSwapBigToHostInt64(x)
+#define le64toh(x) OSSwapLittleToHostInt64(x)
+#endif
+
+#if defined(NDEBUG)
+# error "Bitcoin cannot be compiled without assertions."
+#endif
 
 uint16_t static inline ReadLE16(const unsigned char* ptr)
 {
@@ -73,7 +96,7 @@ void static inline WriteBE64(unsigned char* ptr, uint64_t x)
     *((uint64_t*)ptr) = htobe64(x);
 }
 
-/*int inline init_and_check_sodium()
+int inline init_and_check_sodium()
 {
     if (sodium_init() == -1) {
         return -1;
@@ -109,6 +132,6 @@ void static inline WriteBE64(unsigned char* ptr, uint64_t x)
     assert(crypto_sign_verify_detached(sig, message, sizeof(message), pk) != 0);
 
     return 0;
-}*/
+}
 
 #endif // BITCOIN_CRYPTO_COMMON_H

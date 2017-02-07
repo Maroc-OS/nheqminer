@@ -22,6 +22,13 @@
 #include "speed.hpp"
 #include "api.hpp"
 
+/* support for clang and AVX1/2 detection */
+#ifdef __APPLE__
+#include <cpuid.h>
+#endif
+
+#include <crypto/common.h>
+
 #include <boost/log/core/core.hpp>
 #include <boost/log/core.hpp>
 #include <boost/log/trivial.hpp>
@@ -37,7 +44,7 @@ namespace src = boost::log::sources;
 namespace attrs = boost::log::attributes;
 namespace keywords = boost::log::keywords;
 
-#ifdef __linux__
+#if defined (__linux__) || defined (__APPLE__)
 #define __cpuid(out, infoType)\
 	asm("cpuid": "=a" (out[0]), "=b" (out[1]), "=c" (out[2]), "=d" (out[3]): "a" (infoType));
 #define __cpuidex(out, infoType, ecx)\
@@ -62,10 +69,13 @@ MinerFactory *_MinerFactory = nullptr;
 // stratum client sig
 static ZcashStratumClient* scSig = nullptr;
 
-extern "C" void stratum_sigint_handler(int signum) 
-{ 
+extern "C" void stratum_sigint_handler(int signum)
+{
 	if (scSig) scSig->disconnect();
+	else std::cout << "warning: miner context not found" << std::endl;
 	if (_MinerFactory) _MinerFactory->ClearAllSolvers();
+	std::this_thread::sleep_for(std::chrono::milliseconds(500));
+	exit(0);
 }
 
 void print_help()
@@ -187,7 +197,7 @@ void detect_AVX_and_AVX2()
 
 void start_mining(int api_port, const std::string& host, const std::string& port,
 	const std::string& user, const std::string& password,
-	ZcashStratumClient* handler, const std::vector<ISolver *> &i_solvers)
+	ZcashStratumClient* &handler, const std::vector<ISolver *> &i_solvers)
 {
 	std::shared_ptr<boost::asio::io_service> io_service(new boost::asio::io_service);
 
@@ -201,7 +211,7 @@ void start_mining(int api_port, const std::string& host, const std::string& port
 			api = nullptr;
 		}
 	}
-	
+
 	ZcashMiner miner(i_solvers);
 	ZcashStratumClient sc{
 		io_service, &miner, host, port, user, password, 0, 0
@@ -213,6 +223,10 @@ void start_mining(int api_port, const std::string& host, const std::string& port
 
 	handler = &sc;
 	signal(SIGINT, stratum_sigint_handler);
+	signal(SIGTERM, stratum_sigint_handler);
+	signal(SIGKILL, stratum_sigint_handler);
+	signal(SIGUSR1, stratum_sigint_handler);
+	signal(SIGSTOP, stratum_sigint_handler);
 
 	int c = 0;
 	while (sc.isRunning()) {
@@ -221,11 +235,12 @@ void start_mining(int api_port, const std::string& host, const std::string& port
 		{
 			double allshares = speed.GetShareSpeed() * 60;
 			double accepted = speed.GetShareOKSpeed() * 60;
-			BOOST_LOG_TRIVIAL(info) << CL_YLW "Speed [" << INTERVAL_SECONDS << " sec]: " <<
-				speed.GetHashSpeed() << " I/s, " <<
-				speed.GetSolutionSpeed() << " Sols/s" <<
-				//accepted << " AS/min, " << 
-				//(allshares - accepted) << " RS/min" 
+
+			BOOST_LOG_TRIVIAL(info) << CL_BL2 << "Speed : [" << INTERVAL_SECONDS << " sec]." <<
+				CL_YLW << " [Hash Speed] : " << CL_YL2 << speed.GetHashSpeed() << " I/s." <<
+				CL_YLW << " [Solution Speed] : " << CL_YL2 << speed.GetSolutionSpeed() << " Sols/s." <<
+				CL_GRN << " [Accepted Solutions] : " << CL_GR2 << accepted << " AS/min." <<
+				CL_RED << " [Rejected Solutions] : " << CL_RD2 << (allshares - accepted) << " RS/min." <<
 				CL_N;
 		}
 		if (api) while (api->poll()) {}
@@ -241,6 +256,10 @@ int main(int argc, char* argv[])
 	system(""); // windows 10 colored console
 #endif
 
+	if (init_and_check_sodium() == -1) {
+		return false;
+  }
+
 	std::cout << std::endl;
 	std::cout << "\t==================== www.nicehash.com ====================" << std::endl;
 	std::cout << "\t\tEquihash CPU&GPU Miner for NiceHash v" STANDALONE_MINER_VERSION << std::endl;
@@ -250,9 +269,9 @@ int main(int argc, char* argv[])
 	std::cout << "\t==================== www.nicehash.com ====================" << std::endl;
 	std::cout << std::endl;
 
-	std::string location = "equihash.eu.nicehash.com:3357";
-	std::string user = "34HKWdzLxWBduUfJE9JxaFhoXnfC6gmePG";
-	std::string password = "x";
+	std::string location = "zec-eu.suprnova.cc:2142";
+	std::string user = "Maroc-OS.Merruk";
+	std::string password = "1234567890";
 	int num_threads = 0;
 	bool benchmark = false;
 	int log_level = 2;
@@ -430,7 +449,7 @@ int main(int argc, char* argv[])
     boost::log::add_console_log(
         std::clog,
         boost::log::keywords::auto_flush = true,
-        boost::log::keywords::filter = boost::log::trivial::severity >= log_level,
+        boost::log::keywords::filter = boost::log::trivial::severity == log_level,
         boost::log::keywords::format = (
         boost::log::expressions::stream
             << "[" << boost::log::expressions::format_date_time<boost::posix_time::ptime>("TimeStamp", "%H:%M:%S")
@@ -457,6 +476,11 @@ int main(int argc, char* argv[])
 				return 0;
 			}
 
+			if (location.find("stratum+tcp://") != std::string::npos)
+			{
+				location = location.substr(14);
+			}
+
 			size_t delim = location.find(':');
 			std::string host = delim != std::string::npos ? location.substr(0, delim) : location;
 			std::string port = delim != std::string::npos ? location.substr(delim + 1) : "2142";
@@ -480,4 +504,3 @@ int main(int argc, char* argv[])
 
 	return 0;
 }
-

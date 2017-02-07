@@ -1,7 +1,7 @@
 project(nheqminer)
 cmake_minimum_required(VERSION 3.5)
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11") #  -Wall
+set(CMAKE_CXX_FLAGS "-fPIC -DCURVE_ALT_BN128 -DBOOST_SPIRIT_THREADSAFE -DHAVE_BUILD_INFO -D__STDC_FORMAT_MACROS -std=c++1z ${CMAKE_CXX_FLAGS} -pipe -g -Wstack-protector -fstack-protector-all -fPIE -fvisibility=hidden -fvisibility-inlines-hidden -DSTATIC") #  -Wall
 
 ## Enable solvers here
 #### older slower
@@ -9,7 +9,7 @@ option(USE_CPU_TROMP "USE CPU_TROMP" OFF)
 option(USE_CUDA_TROMP "USE CUDA_TROMP" OFF)
 #### faster
 option(USE_CPU_XENONCAT "USE CPU_XENONCAT" ON)
-option(USE_CUDA_DJEZO "USE CUDA_DJEZO" ON)
+option(USE_CUDA_DJEZO "USE CUDA_DJEZO" OFF)
 
 ## Add solvers here
 if (USE_CPU_TROMP)
@@ -29,7 +29,6 @@ if (USE_CUDA_DJEZO)
     message("-- USE_CUDA_DJEZO DEFINED")
 endif()
 
-
 ########
 # LINUX
 if(CMAKE_COMPILER_IS_GNUCXX)
@@ -44,19 +43,32 @@ if(CMAKE_COMPILER_IS_GNUCXX)
     set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -m64 -msse2")
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -m64 -msse2")
     # optimizations
-    add_definitions(-O2)
+    add_definitions(-Ofast)
+endif()
+
+if (CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+    #set(CMAKE_GCC_COMPILER "/usr/local/bin/gcc-6")
+    #set(CMAKE_CPP_COMPILER "/usr/local/bin/cpp-6")
+    #set(CMAKE_CXX_COMPILER "/usr/local/bin/c++-6")
+    #set(CMAKE_CXX_LINK_EXECUTABLE "/usr/local/bin/c++-6")
+    # use native cpu features
+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -march=native -fPIC")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -march=native -fPIC")
+
+    # optimizations
+    add_definitions(-g3 -O0 -DDEBUG -Wall -Wextra -Wformat -Wformat-security -Wno-unused-parameter -Wno-self-assign)
 endif()
 
 # Common
 include_directories(${nheqminer_SOURCE_DIR}/nheqminer)
 
 # BOOST
-#find_package(Threads REQUIRED COMPONENTS)
+find_package(Threads REQUIRED COMPONENTS)
 # compile boost staticaly
 set(Boost_USE_STATIC_LIBS ON)
 set(CMAKE_FIND_LIBRARY_SUFFIXES ".a")
 #set(BUILD_SHARED_LIBRARIES OFF)
-#set(CMAKE_EXE_LINKER_FLAGS "-static-libgcc -static-libstdc++ -static")
+set(CMAKE_EXE_LINKER_FLAGS "-std=c++1z -lpthread -lboost_log_setup-mt -lboost_log-mt -lboost_date_time-mt -lboost_filesystem-mt -lboost_thread-mt -lboost_regex-mt -lboost_chrono-mt -lboost_atomic-mt -lboost_system-mt -lcrypto -lsodium")
 find_package(Boost REQUIRED COMPONENTS system log_setup log date_time filesystem thread)
 
 if (Boost_FOUND)
@@ -78,6 +90,7 @@ else()
     message("Boost_FOUND NOT FOUND")
 endif ()
 
+include_directories(${CMAKE_CURRENT_BINARY_DIR})
 include_directories(${CMAKE_CURRENT_BINARY_DIR}/../)
 
 set(SOURCE_FILES
@@ -121,6 +134,7 @@ set(SOURCE_FILES
     nheqminer/speed.hpp
     nheqminer/streams.h
     nheqminer/support/allocators/zeroafterfree.h
+    nheqminer/threadsafety.h
     nheqminer/tinyformat.h
     nheqminer/uint252.h
     nheqminer/uint256.h
@@ -152,8 +166,8 @@ set(SOURCE_FILES
     blake2/blake2-round.h
     )
 
-#set(LIBS ${LIBS} ${Threads_LIBRARIES} ${Boost_LIBRARIES})
-set(LIBS ${LIBS} ${Boost_LIBRARIES})
+set(LIBS ${LIBS} ${Threads_LIBRARIES} ${Boost_LIBRARIES})
+#set(LIBS ${LIBS} ${Boost_LIBRARIES})
 
 message("-- CXXFLAGS: ${CMAKE_CXX_FLAGS}")
 message("-- LIBS: ${LIBS}")
@@ -171,8 +185,6 @@ if (USE_CUDA_DJEZO)
     add_subdirectory(cuda_djezo)
 endif()
 
-#add_subdirectory(cpu_xenoncat)
-
 ADD_EXECUTABLE(${PROJECT_NAME} ${SOURCE_FILES})
 
 #target_link_libraries(${PROJECT_NAME} ${LIBS} ${CUDA_LIBRARIES} )
@@ -183,16 +195,23 @@ if (USE_CPU_TROMP)
     target_link_libraries(${PROJECT_NAME} cpu_tromp)
 endif()
 if (USE_CPU_XENONCAT)
-    add_library ( xenoncat_avx1 SHARED IMPORTED GLOBAL )
-    set_target_properties ( xenoncat_avx1 PROPERTIES IMPORTED_LOCATION "../nheqminer/cpu_xenoncat/asm_linux/equihash_avx1.o" )
-    add_library ( xenoncat_avx2 SHARED IMPORTED GLOBAL )
-    set_target_properties ( xenoncat_avx2 PROPERTIES IMPORTED_LOCATION "../nheqminer/cpu_xenoncat/asm_linux/equihash_avx2.o" )
+    if(${CMAKE_SYSTEM_NAME} STREQUAL "Darwin")
+        add_library ( xenoncat_avx1 SHARED IMPORTED GLOBAL )
+        set_target_properties ( xenoncat_avx1 PROPERTIES IMPORTED_LOCATION "../nheqminer/cpu_xenoncat/MacOSX/equihash_avx1.o" )
+        add_library ( xenoncat_avx2 SHARED IMPORTED GLOBAL )
+        set_target_properties ( xenoncat_avx2 PROPERTIES IMPORTED_LOCATION "../nheqminer/cpu_xenoncat/MacOSX/equihash_avx2.o" )
+    else()
+        add_library ( xenoncat_avx1 SHARED IMPORTED GLOBAL )
+        set_target_properties ( xenoncat_avx1 PROPERTIES IMPORTED_LOCATION "../nheqminer/cpu_xenoncat/asm_linux/equihash_avx1.o" )
+        add_library ( xenoncat_avx2 SHARED IMPORTED GLOBAL )
+        set_target_properties ( xenoncat_avx2 PROPERTIES IMPORTED_LOCATION "../nheqminer/cpu_xenoncat/asm_linux/equihash_avx2.o" )
+    endif()
     target_link_libraries(${PROJECT_NAME} cpu_xenoncat xenoncat_avx1 xenoncat_avx2)
 endif()
+
 if (USE_CUDA_TROMP)
     target_link_libraries(${PROJECT_NAME} cuda_tromp)
 endif()
 if (USE_CUDA_DJEZO)
     target_link_libraries(${PROJECT_NAME} cuda_djezo)
 endif()
-

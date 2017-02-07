@@ -75,6 +75,8 @@ public:
                parents.size() * 32; // parents
     }
 
+    size_t size() const;
+
     void append(Hash obj);
     Hash root() const {
         return root(Depth, std::deque<Hash>());
@@ -194,4 +196,3 @@ typedef libzcash::IncrementalWitness<INCREMENTAL_MERKLE_TREE_DEPTH, libzcash::SH
 typedef libzcash::IncrementalWitness<INCREMENTAL_MERKLE_TREE_DEPTH_TESTING, libzcash::SHA256Compress> ZCTestingIncrementalWitness;
 
 #endif /* ZCINCREMENTALMERKLETREE_H_ */
-

@@ -43,10 +43,12 @@ JSDescription::JSDescription(ZCJoinSplit& params,
 
 bool JSDescription::Verify(
     ZCJoinSplit& params,
+    libzcash::ProofVerifier& verifier,
     const uint256& pubKeyHash
 ) const {
     return params.verify(
         proof,
+        verifier,
         pubKeyHash,
         randomSeed,
         macs,
@@ -117,7 +119,7 @@ CMutableTransaction::CMutableTransaction() : nVersion(CTransaction::CURRENT_VERS
 CMutableTransaction::CMutableTransaction(const CTransaction& tx) : nVersion(tx.nVersion), vin(tx.vin), vout(tx.vout), nLockTime(tx.nLockTime),
                                                                    vjoinsplit(tx.vjoinsplit), joinSplitPubKey(tx.joinSplitPubKey), joinSplitSig(tx.joinSplitSig)
 {
-    
+
 }
 
 uint256 CMutableTransaction::GetHash() const

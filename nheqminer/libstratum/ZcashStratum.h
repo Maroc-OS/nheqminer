@@ -6,7 +6,7 @@
 #include "arith_uint256.h"
 #include "primitives/block.h"
 #include "uint256.h"
-#include "util.h"
+#include "zcash/util.h"
 
 #include <boost/signals2.hpp>
 //#include <boost/signals.hpp>

@@ -1,6 +1,8 @@
 project(nheqminer)
 cmake_minimum_required(VERSION 3.5)
 
+# Lot of things has to be properly fixed/added or removed, this needs clean up.
+
 set(CMAKE_CXX_FLAGS "-fPIC -DCURVE_ALT_BN128 -DBOOST_SPIRIT_THREADSAFE -DHAVE_BUILD_INFO -D__STDC_FORMAT_MACROS -std=c++1z ${CMAKE_CXX_FLAGS} -pipe -g -Wstack-protector -fstack-protector-all -fPIE -fvisibility=hidden -fvisibility-inlines-hidden -DSTATIC") #  -Wall
 
 ## Enable solvers here
@@ -47,10 +49,6 @@ if(CMAKE_COMPILER_IS_GNUCXX)
 endif()
 
 if (CMAKE_CXX_COMPILER_ID MATCHES "Clang")
-    #set(CMAKE_GCC_COMPILER "/usr/local/bin/gcc-6")
-    #set(CMAKE_CPP_COMPILER "/usr/local/bin/cpp-6")
-    #set(CMAKE_CXX_COMPILER "/usr/local/bin/c++-6")
-    #set(CMAKE_CXX_LINK_EXECUTABLE "/usr/local/bin/c++-6")
     # use native cpu features
     set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -march=native -fPIC")
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -march=native -fPIC")

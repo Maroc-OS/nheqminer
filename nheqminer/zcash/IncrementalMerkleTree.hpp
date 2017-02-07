@@ -81,6 +81,7 @@ public:
     Hash root() const {
         return root(Depth, std::deque<Hash>());
     }
+    Hash last() const;
 
     IncrementalWitness<Depth, Hash> witness() const {
         return IncrementalWitness<Depth, Hash>(*this);
@@ -140,6 +141,12 @@ public:
         return tree.path(partial_path());
     }
 
+    // Return the element being witnessed (should be a note
+    // commitment!)
+    Hash element() const {
+        return tree.last();
+    }
+
     Hash root() const {
         return tree.root(Depth, partial_path());
     }
@@ -165,7 +172,7 @@ private:
     IncrementalMerkleTree<Depth, Hash> tree;
     std::vector<Hash> filled;
     boost::optional<IncrementalMerkleTree<Depth, Hash>> cursor;
-    size_t cursor_depth;
+    size_t cursor_depth = 0;
     std::deque<Hash> partial_path() const;
     IncrementalWitness(IncrementalMerkleTree<Depth, Hash> tree) : tree(tree) {}
 };

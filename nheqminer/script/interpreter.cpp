@@ -1137,9 +1137,9 @@ bool TransactionSignatureChecker::CheckSig(const vector<unsigned char>& vchSigIn
 
     uint256 sighash;
     try {
-        sighash = SignatureHash(scriptCode, *txTo, nIn, nHashType);
+      sighash = SignatureHash(scriptCode, *txTo, nIn, nHashType);
     } catch (logic_error ex) {
-        return false;
+      return false;
     }
 
     if (!VerifySignature(vchSig, pubkey, sighash))

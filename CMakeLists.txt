@@ -3,7 +3,7 @@ cmake_minimum_required(VERSION 3.5)
 
 # Lot of things has to be properly fixed/added or removed, this needs clean up.
 
-set(CMAKE_CXX_FLAGS "-fPIC -DCURVE_ALT_BN128 -DBOOST_SPIRIT_THREADSAFE -DHAVE_BUILD_INFO -D__STDC_FORMAT_MACROS -std=c++1z ${CMAKE_CXX_FLAGS} -pipe -g -Wstack-protector -fstack-protector-all -fPIE -fvisibility=hidden -fvisibility-inlines-hidden -DSTATIC") #  -Wall
+set(CMAKE_CXX_FLAGS "-fPIC -DCURVE_ALT_BN128 -D__STDC_FORMAT_MACROS -std=c++1z ${CMAKE_CXX_FLAGS} -Wall -Wextra -Wformat -Wformat-security -Wno-unused-parameter -Wno-self-assign -pipe -g -Wstack-protector -fstack-protector-all -fPIE -fvisibility=hidden -fvisibility-inlines-hidden -DSTATIC") #  -Wall
 
 ## Enable solvers here
 #### older slower
@@ -54,7 +54,7 @@ if (CMAKE_CXX_COMPILER_ID MATCHES "Clang")
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -march=native -fPIC")
 
     # optimizations
-    add_definitions(-g3 -O0 -DDEBUG -Wall -Wextra -Wformat -Wformat-security -Wno-unused-parameter -Wno-self-assign)
+    add_definitions(-g3 -Ofast)
 endif()
 
 # Common

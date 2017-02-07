@@ -12,6 +12,8 @@
 #define ZC_R_SIZE 32
 #define ZC_MEMO_SIZE 512
 
-#define ZC_NOTEPLAINTEXT_SIZE (ZC_NOTEPLAINTEXT_LEADING + ZC_V_SIZE + ZC_RHO_SIZE + ZC_R_SIZE + ZC_MEMO_SIZE)
+#define ZC_NOTEPLAINTEXT_SIZE                                                  \
+  (ZC_NOTEPLAINTEXT_LEADING + ZC_V_SIZE + ZC_RHO_SIZE + ZC_R_SIZE +            \
+   ZC_MEMO_SIZE)
 
 #endif // _ZCCONSTANTS_H_

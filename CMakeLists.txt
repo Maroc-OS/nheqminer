@@ -71,7 +71,7 @@ find_library(CRYPTO_LIB libcrypto.a REQUIRED)
 
 set(sodium_USE_STATIC_LIBS ON)
 find_package(sodium REQUIRED)
-if (sodium_FOUND)
+if (Sodium_FOUND)
   include_directories(SYSTEM ${sodium_INCLUDE_DIR})
   link_directories(${sodium_LIBRARY_DIRS})
 else ()

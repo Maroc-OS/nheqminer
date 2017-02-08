@@ -239,8 +239,8 @@ void start_mining(int api_port, const std::string &host,
 
   int c = 0;
   while (sc.isRunning()) {
-    std::this_thread::sleep_for(std::chrono::milliseconds(1));
-    if (++c % 100 == 0) {
+    std::this_thread::sleep_for(std::chrono::milliseconds(10));
+    if (++c % 1000 == 0) {
       double allshares = speed.GetShareSpeed() * 60;
       double accepted = speed.GetShareOKSpeed() * 60;
 
@@ -253,9 +253,10 @@ void start_mining(int api_port, const std::string &host,
           << CL_RED << " [Rejected Solutions] : " << CL_RD2
           << (allshares - accepted) << " RS/min." << CL_N;
     }
-    if (api)
+    if (api) {
       while (api->poll()) {
       }
+    }
   }
 
   if (api)

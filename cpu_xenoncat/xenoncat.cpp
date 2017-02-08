@@ -13,11 +13,12 @@
 #include "cpu_xenoncat.hpp"
 
 #define CONTEXT_SIZE 178033152
+#define EQXC_CONTEXT_ALLOC  (EQXC_CONTEXT_SIZE+4096)
 
 //#define USE_XENON_DLL
 
 #ifdef __cplusplus
-extern "C" 
+extern "C"
 #endif
 {
 #ifndef USE_XENON_DLL
@@ -57,7 +58,7 @@ extern "C"
 }
 #endif
 
-void cpu_xenoncat::start(cpu_xenoncat& device_context) 
+void cpu_xenoncat::start(cpu_xenoncat& device_context)
 {
 #ifdef USE_XENON_DLL
 	init_library(device_context.use_opt);
@@ -68,8 +69,8 @@ void cpu_xenoncat::start(cpu_xenoncat& device_context)
 	// todo: improve memory; LOCKED_PAGES ?
 }
 
-void cpu_xenoncat::stop(cpu_xenoncat& device_context) 
-{ 
+void cpu_xenoncat::stop(cpu_xenoncat& device_context)
+{
 	free(device_context.memory_alloc);
 }
 
@@ -103,7 +104,7 @@ void cpu_xenoncat::solve(const char *tequihash_header,
 		numsolutions = EhSolverAVX1(device_context.memory, *(uint32_t *)(context + 136));
 	}
 #endif
-	for (i = 0; i < numsolutions; i++) 
+	for (i = 0; i < numsolutions; i++)
 	{
 		//printf("Solution found, start: %08x\n", *(uint32_t*)((unsigned char*)device_context.memory + (1344 * i)));
 		solutionf(std::vector<uint32_t>(0), 1344, (unsigned char*)device_context.memory + (1344 * i));

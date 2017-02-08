@@ -1,6 +1,6 @@
 #include "JoinSplit.hpp"
 #include "prf.h"
-#include <sodium.h>
+#include <crypto/common.h>
 
 #include "zcash/util.h"
 

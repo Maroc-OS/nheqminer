@@ -1,8 +1,3 @@
-#include <chrono>
-#include <iostream>
-#include <mutex>
-#include <vector>
-
 #include "speed.hpp"
 
 Speed::Speed(int interval)

@@ -239,16 +239,16 @@ void start_mining(int api_port, const std::string &host,
 
   int c = 0;
   while (sc.isRunning()) {
-    std::this_thread::sleep_for(std::chrono::milliseconds(10));
-    if (++c % 1000 == 0) {
+    std::this_thread::sleep_for(std::chrono::milliseconds(1));
+    if (++c % 100 == 0) {
       double allshares = speed.GetShareSpeed() * 60;
       double accepted = speed.GetShareOKSpeed() * 60;
 
       BOOST_LOG_TRIVIAL(info)
           << CL_BL2 << "Speed : [" << INTERVAL_SECONDS << " sec]." << CL_YLW
-          << " [Hash Speed] : " << CL_YL2 << speed.GetHashSpeed() << " I/s."
+          << " [Hash Speed] : " << CL_YL2 << speed.GetHashSpeed() << " Hash/s."
           << CL_YLW << " [Solution Speed] : " << CL_YL2
-          << speed.GetSolutionSpeed() << " Sols/s." << CL_GRN
+          << speed.GetSolutionSpeed() << " Sol/s." << CL_GRN
           << " [Accepted Solutions] : " << CL_GR2 << accepted << " AS/min."
           << CL_RED << " [Rejected Solutions] : " << CL_RD2
           << (allshares - accepted) << " RS/min." << CL_N;
@@ -293,7 +293,7 @@ int main(int argc, char *argv[]) {
   int num_threads = 0;
   bool benchmark = false;
   int log_level = 2;
-  int num_hashes = 200;
+  int num_hashes = 100;
   int api_port = 0;
   int cuda_device_count = 0;
   int cuda_bc = 0;

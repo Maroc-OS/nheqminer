@@ -6,10 +6,11 @@ set(CMAKE_COLOR_MAKEFILE ON)
 
 ## Extra cmake files
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/Modules/")
+message("-- Add LOCAL_CMAKE_MODULE_PATH: ${CMAKE_MODULE_PATH}")
 
 ## Lot of things has to be properly fixed/added or removed, this needs clean up.
 
-set(CMAKE_CXX_FLAGS "-std=c++1z ${CMAKE_CXX_FLAGS} -Wall -Wextra -Wformat -Wformat-security -Wno-unused-parameter -pipe -g -Wstack-protector -fstack-protector-all -fPIE -fvisibility=hidden -fvisibility-inlines-hidden -DSTATIC")
+set(CMAKE_CXX_FLAGS "-std=c++1z ${CMAKE_CXX_FLAGS} -Wall -Wextra -Wformat -Wformat-security -Wno-unused-parameter -pipe -g -Wstack-protector -fstack-protector-all -fPIE -fvisibility=hidden -fvisibility-inlines-hidden")
 
 ## Enable solvers here
 #### older slower
@@ -45,7 +46,7 @@ if(CMAKE_COMPILER_IS_GNUCXX)
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -march=native -fPIC")
 
   # optimizations
-  add_definitions(-g3 -Ofast)
+  add_definitions(-g0 -Ofast)
 endif()
 ########
 # AppleClang
@@ -55,7 +56,7 @@ if (CMAKE_CXX_COMPILER_ID MATCHES "Clang")
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-self-assign -march=native -fPIC")
 
     # optimizations
-    add_definitions(-g3 -Ofast)
+    add_definitions(-g0 -Ofast)
 endif()
 
 # Common
@@ -185,14 +186,15 @@ set(SOURCE_FILES
     )
 
 if (CMAKE_COMPILER_IS_GNUCXX)
-  set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -std=c++1z -lpthread -lcrypto -lsodium")
+  set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -std=c++1z -lpthread -lssl -lcrypto -lsodium")
+  set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -lboost_log_setup -lboost_log -lboost_date_time -lboost_filesystem -lboost_thread -lboost_regex -lboost_chrono -lboost_atomic -lboost_system")
   set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -static -static-libgcc -static-libstdc++")
 endif ()
 if (CMAKE_CXX_COMPILER_ID MATCHES "Clang")
-  set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -std=c++1z -lpthread -lboost_log_setup-mt -lboost_log-mt -lboost_date_time-mt -lboost_filesystem-mt -lboost_thread-mt -lboost_regex-mt -lboost_chrono-mt -lboost_atomic-mt -lboost_system-mt -lcrypto -lsodium")
-  set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS}")
+  set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -std=c++1z -lpthread  -lssl -lcrypto -lsodium")
+  set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -lboost_log_setup-mt -lboost_log-mt -lboost_date_time-mt -lboost_filesystem-mt -lboost_thread-mt -lboost_regex-mt -lboost_chrono-mt -lboost_atomic-mt -lboost_system-mt")
 endif ()
-set(LIBS ${LIBS} ${SSL_LIB} ${CRYPTO_LIB} ${sodium_LIBRARY_RELEASE} ${Threads_LIBRARIES} ${sodium_LIBRARY_RELEASE}  ${Boost_LIBRARIES})
+set(LIBS ${LIBS} ${SSL_LIB} ${CRYPTO_LIB} ${sodium_LIBRARY_RELEASE} ${Threads_LIBRARIES} ${Boost_LIBRARIES})
 
 message("-- CXXFLAGS: ${CMAKE_CXX_FLAGS}")
 message("-- LIBS: ${LIBS}")
@@ -219,18 +221,60 @@ target_link_libraries(${PROJECT_NAME} ${CMAKE_THREAD_LIBS_INIT} ${LIBS} )
 if (USE_CPU_TROMP)
     target_link_libraries(${PROJECT_NAME} cpu_tromp)
 endif()
+
 if (USE_CPU_XENONCAT)
-    if(${CMAKE_SYSTEM_NAME} STREQUAL "Darwin")
-        add_library ( xenoncat_avx1 SHARED IMPORTED GLOBAL )
-        set_target_properties ( xenoncat_avx1 PROPERTIES IMPORTED_LOCATION "../nheqminer/cpu_xenoncat/MacOSX/equihash_avx1.o" )
-        add_library ( xenoncat_avx2 SHARED IMPORTED GLOBAL )
-        set_target_properties ( xenoncat_avx2 PROPERTIES IMPORTED_LOCATION "../nheqminer/cpu_xenoncat/MacOSX/equihash_avx2.o" )
-    else()
-        add_library ( xenoncat_avx1 SHARED IMPORTED GLOBAL )
-        set_target_properties ( xenoncat_avx1 PROPERTIES IMPORTED_LOCATION "../nheqminer/cpu_xenoncat/asm_linux/equihash_avx1.o" )
-        add_library ( xenoncat_avx2 SHARED IMPORTED GLOBAL )
-        set_target_properties ( xenoncat_avx2 PROPERTIES IMPORTED_LOCATION "../nheqminer/cpu_xenoncat/asm_linux/equihash_avx2.o" )
-    endif()
+
+  if(${CMAKE_SYSTEM_NAME} STREQUAL "Darwin")
+      set (CPU_XENONCAT_DIR "MacOSX")
+  else()
+      set (CPU_XENONCAT_DIR "asm_linux")
+  endif()
+
+      set(XENONCAT_BUILD_DIR "${CMAKE_CURRENT_SOURCE_DIR}/cpu_xenoncat/${CPU_XENONCAT_DIR}")
+      message("${XENONCAT_BUILD_DIR}")
+      set(XENONCAT_AVX1_OBJECT "${XENONCAT_BUILD_DIR}/equihash_avx1.o")
+      set(XENONCAT_AVX2_OBJECT "${XENONCAT_BUILD_DIR}/equihash_avx2.o")
+
+      add_custom_target(
+          cpu_xenoncat_ojbects ALL
+          #OUTPUT equihash_avx1.o
+          #OUTPUT equihash_avx2.o
+          COMMAND ${CMAKE_MAKE_PROGRAM}
+          WORKING_DIRECTORY ${XENONCAT_BUILD_DIR}
+          COMMENT "Building ASM CPU_XenonCat AVX Object files"
+      )
+      #add_library (xenoncat_avx1 STATIC equihash_avx1.o)
+      add_library (xenoncat_avx1 SHARED IMPORTED GLOBAL)
+      set_property(TARGET xenoncat_avx1 APPEND PROPERTY IMPORTED_CONFIGURATIONS NOCONFIG)
+      set_source_files_properties(
+        equihash_avx1.o
+        PROPERTIES
+        EXTERNAL_OBJECT true
+        GENERATED true
+      )
+      set_target_properties (
+          xenoncat_avx1
+          PROPERTIES
+          LINKER_LANGUAGE CXX
+          IMPORTED_LOCATION_NOCONFIG "${XENONCAT_AVX1_OBJECT}"
+      )
+
+      #add_library (xenoncat_avx2 STATIC equihash_avx2.o)
+      add_library (xenoncat_avx2 SHARED IMPORTED GLOBAL)
+      set_source_files_properties(
+        equihash_avx2.o
+        PROPERTIES
+        EXTERNAL_OBJECT true
+        GENERATED true
+      )
+      set_target_properties (
+          xenoncat_avx2
+          PROPERTIES
+          LINKER_LANGUAGE CXX
+          IMPORTED_LOCATION_NOCONFIG "${XENONCAT_AVX2_OBJECT}"
+      )
+      add_dependencies(xenoncat_avx1 xenoncat_avx2 cpu_xenoncat_ojbects)
+
     target_link_libraries(${PROJECT_NAME} cpu_xenoncat xenoncat_avx1 xenoncat_avx2)
 endif()
 

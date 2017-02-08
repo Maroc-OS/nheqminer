@@ -255,7 +255,6 @@ void StratumClient<Miner, Job, Solution>::processReponse(
           if (!workOrder->clean) {
             BOOST_LOG_CUSTOM(info) << CL_CYN "Ignoring non-clean job #"
                                    << workOrder->jobId() << CL_N;
-            ;
             break;
           }
 

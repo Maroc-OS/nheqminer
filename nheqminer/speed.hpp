@@ -1,6 +1,12 @@
 #pragma once
 
-#define INTERVAL_SECONDS 10 // 15 seconds
+#include <chrono>
+#include <iostream>
+#include <mutex>
+#include <vector>
+
+
+#define INTERVAL_SECONDS 60 // 15 seconds
 
 class Speed {
   int m_interval;

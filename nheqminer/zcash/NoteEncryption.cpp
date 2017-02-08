@@ -1,7 +1,7 @@
 #include "NoteEncryption.hpp"
 #include "prf.h"
-#include <sodium.h>
 #include <boost/static_assert.hpp>
+#include <crypto/common.h>
 #include <stdexcept>
 
 #define NOTEENCRYPTION_CIPHER_KEYSIZE 32

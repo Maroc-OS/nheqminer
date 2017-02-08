@@ -419,6 +419,8 @@ intermediate/**
 ## ignore exceptions
 !lib/**
 !inc/**
+!cpu_xenoncat/asm_linux/Makefile
+!cpu_xenoncat/MacOSX/Makefile
 build
 
 !nheqminer/libs/**

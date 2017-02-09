@@ -112,7 +112,7 @@ typename NoteDecryption<MLEN>::Plaintext NoteDecryption<MLEN>::decrypt(
   if (crypto_aead_chacha20poly1305_ietf_decrypt(
           plaintext.begin(), NULL, NULL, ciphertext.begin(),
           NoteDecryption<MLEN>::CLEN, NULL, 0, cipher_nonce, K) != 0) {
-    throw std::runtime_error("Could not decrypt message");
+    throw note_decryption_failed();
   }
 
   return plaintext;

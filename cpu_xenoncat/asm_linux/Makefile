@@ -2,10 +2,11 @@
 # Run assembler.
 #
 
-FASM = $(wildcard $(CURDIR)/fasm)
-FASMOPT = -m 1920000 -p 8
+CUR ?= $(wildcard $(CURDIR))
+FASM ?= $(wildcard $(CUR)/fasm)
+FASMOPT ?= -m 1920000 -p 8
 
-ASMDIR = $(wildcard $(CURDIR)/asm)
+ASMDIR ?= $(wildcard $(CUR))
 SOURCEFILES = $(wildcard $(ASMDIR)/*.asm) $(wildcard $(ASMDIR)/*.inc)
 
 all: equihash_avx1.o equihash_avx2.o

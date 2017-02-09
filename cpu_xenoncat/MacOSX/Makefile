@@ -2,13 +2,14 @@
 # Run assembler.
 #
 
-FASM ?= $(wildcard $(CURDIR)/fasm)
-OBJCONV ?= $(wildcard $(CURDIR)/objconv)
+CUR ?= $(wildcard $(CURDIR))
+FASM ?= $(wildcard $(CUR)/fasm)
+OBJCONV ?= $(wildcard $(CUR)/objconv)
 
 FASMOPT = -m 1920000 -p 8
 OBJCONVOPT = -fmacho -nu -xs -v0
 
-ASMDIR = $(wildcard $(CURDIR)/asm)
+ASMDIR ?= $(wildcard $(CUR)/asm)
 SOURCEFILES = $(wildcard $(ASMDIR)/*.asm) $(wildcard $(ASMDIR)/*.inc)
 
 all: equihash_avx1_obj.o equihash_avx1.o equihash_avx2_obj.o equihash_avx2.o

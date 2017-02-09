@@ -541,8 +541,13 @@ template <typename Stream, typename T, typename A>
 void Serialize_impl(Stream &os, const std::vector<T, A> &v, int nType,
                     int nVersion, const unsigned char &);
 template <typename Stream, typename T, typename A, typename V>
-void Serialize_impl(Stream &os, const std::vector<T, A> &v, int nType,
-                    int nVersion, const V &);
+#if !defined (__clang__)
+void Serialize_impl(Stream &os, const std::vector<T, A> &v, int nType, int nVersion,
+                    const V &);
+#else
+void Serialize_impl(Stream &os, std::vector<T, A> &v, int nType, int nVersion,
+                    const V &);
+#endif
 template <typename Stream, typename T, typename A>
 inline void Serialize(Stream &os, const std::vector<T, A> &v, int nType,
                       int nVersion);
@@ -724,6 +729,7 @@ void Serialize_impl(Stream &os, const std::vector<T, A> &v, int nType, int nVers
                     const V &) {
   WriteCompactSize(os, v.size());
   for (typename std::vector<T, A>::const_iterator vi = v.begin(); vi != v.end();
+      ++vi)
       ::Serialize(os, (*vi), nType, nVersion);
 }
 #else

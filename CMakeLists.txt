@@ -184,8 +184,8 @@ set(SOURCE_FILES
 ########
 # Set linker flags
 if (CMAKE_COMPILER_IS_GNUCXX)
-  set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -std=c++1z -lpthread -lssl -lcrypto -lsodium")
-  set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -lboost_log_setup -lboost_log -lboost_date_time -lboost_filesystem -lboost_thread -lboost_regex -lboost_chrono -lboost_atomic -lboost_system")
+  set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -std=c++1z -lpthread")
+  set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -lboost_log_setup -lboost_log -lboost_date_time -lboost_filesystem -lboost_thread -lboost_regex -lboost_chrono -lboost_atomic -lboost_system -lssl -lcrypto -lsodium")
   set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -static -static-libgcc -static-libstdc++")
 endif ()
 if (CMAKE_CXX_COMPILER_ID MATCHES "Clang")

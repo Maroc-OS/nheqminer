@@ -22,12 +22,12 @@ base_uint<BITS> &base_uint<BITS>::operator<<=(unsigned int shift) {
   base_uint<BITS> a(*this);
   for (int i = 0; i < WIDTH; i++)
     pn[i] = 0;
-  int k = shift / 32;
-  shift = shift % 32;
+  int k = (shift / 32);
+  shift = (shift & 31);
   for (int i = 0; i < WIDTH; i++) {
-    if (i + k + 1 < WIDTH && shift != 0)
+    if (((i + k + 1) < WIDTH) && (shift != 0))
       pn[i + k + 1] |= (a.pn[i] >> (32 - shift));
-    if (i + k < WIDTH)
+    if ((i + k) < WIDTH)
       pn[i + k] |= (a.pn[i] << shift);
   }
   return *this;
@@ -38,12 +38,12 @@ base_uint<BITS> &base_uint<BITS>::operator>>=(unsigned int shift) {
   base_uint<BITS> a(*this);
   for (int i = 0; i < WIDTH; i++)
     pn[i] = 0;
-  int k = shift / 32;
-  shift = shift % 32;
+  int k = (shift / 32);
+  shift = (shift & 31);
   for (int i = 0; i < WIDTH; i++) {
-    if (i - k - 1 >= 0 && shift != 0)
+    if (((i - k - 1) >= 0) && (shift != 0))
       pn[i - k - 1] |= (a.pn[i] << (32 - shift));
-    if (i - k >= 0)
+    if ((i - k) >= 0)
       pn[i - k] |= (a.pn[i] >> shift);
   }
   return *this;
@@ -53,7 +53,7 @@ template <unsigned int BITS>
 base_uint<BITS> &base_uint<BITS>::operator*=(uint32_t b32) {
   uint64_t carry = 0;
   for (int i = 0; i < WIDTH; i++) {
-    uint64_t n = carry + (uint64_t)b32 * pn[i];
+    uint64_t n = (carry + (uint64_t)b32 * pn[i]);
     pn[i] = n & 0xffffffff;
     carry = n >> 32;
   }
@@ -67,7 +67,7 @@ base_uint<BITS> &base_uint<BITS>::operator*=(const base_uint &b) {
   for (int j = 0; j < WIDTH; j++) {
     uint64_t carry = 0;
     for (int i = 0; i + j < WIDTH; i++) {
-      uint64_t n = carry + pn[i + j] + (uint64_t)a.pn[j] * b.pn[i];
+      uint64_t n = (carry + pn[i + j] + (uint64_t)a.pn[j] * b.pn[i]);
       pn[i + j] = n & 0xffffffff;
       carry = n >> 32;
     }
@@ -186,27 +186,28 @@ arith_uint256 &arith_uint256::SetCompact(uint32_t nCompact, bool *pfNegative,
   int nSize = nCompact >> 24;
   uint32_t nWord = nCompact & 0x007fffff;
   if (nSize <= 3) {
-    nWord >>= 8 * (3 - nSize);
+    nWord >>= (8 * (3 - nSize));
     *this = nWord;
   } else {
     *this = nWord;
-    *this <<= 8 * (nSize - 3);
+    *this <<= (8 * (nSize - 3));
   }
   if (pfNegative)
-    *pfNegative = nWord != 0 && (nCompact & 0x00800000) != 0;
+    (*pfNegative = nWord != 0) && ((nCompact & 0x00800000) != 0);
   if (pfOverflow)
-    *pfOverflow = nWord != 0 && ((nSize > 34) || (nWord > 0xff && nSize > 33) ||
-                                 (nWord > 0xffff && nSize > 32));
+    (*pfOverflow = nWord != 0) &&
+        ((nSize > 34) || (nWord > 0xff && nSize > 33) ||
+         (nWord > 0xffff && nSize > 32));
   return *this;
 }
 
 uint32_t arith_uint256::GetCompact(bool fNegative) const {
-  int nSize = (bits() + 7) / 8;
+  int nSize = ((bits() + 7) / 8);
   uint32_t nCompact = 0;
   if (nSize <= 3) {
-    nCompact = GetLow64() << 8 * (3 - nSize);
+    nCompact = (GetLow64() << (8 * (3 - nSize)));
   } else {
-    arith_uint256 bn = *this >> 8 * (nSize - 3);
+    arith_uint256 bn = (*this >> (8 * (nSize - 3)));
     nCompact = bn.GetLow64();
   }
   // The 0x00800000 bit denotes the sign.
@@ -219,14 +220,14 @@ uint32_t arith_uint256::GetCompact(bool fNegative) const {
   assert((nCompact & ~0x007fffff) == 0);
   assert(nSize < 256);
   nCompact |= nSize << 24;
-  nCompact |= (fNegative && (nCompact & 0x007fffff) ? 0x00800000 : 0);
+  nCompact |= (fNegative && ((nCompact & 0x007fffff) ? 0x00800000 : 0));
   return nCompact;
 }
 
 uint256 ArithToUint256(const arith_uint256 &a) {
   uint256 b;
   for (int x = 0; x < a.WIDTH; ++x)
-    WriteLE32(b.begin() + x * 4, a.pn[x]);
+    WriteLE32((b.begin() + x * 4), a.pn[x]);
   return b;
 }
 arith_uint256 UintToArith256(const uint256 &a) {

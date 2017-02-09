@@ -11,9 +11,12 @@
 #include "speed.hpp"
 #include <atomic>
 #include <boost/circular_buffer.hpp>
+#include <boost/date_time/posix_time/posix_time.hpp>
 #include <boost/log/trivial.hpp>
 #include <boost/thread/exceptions.hpp>
+#include <boost/thread/thread.hpp>
 #include <chrono>
+#include <inttypes.h>
 #include <iostream>
 #include <thread>
 
@@ -413,6 +416,12 @@ void ZcashMiner::stop() {
       minerThreadActive[i] = false;
     for (int i = 0; i < nThreads; i++)
       minerThreads[i].join();
+    for (int i = 0; i < nThreads; i++) {
+      BOOST_LOG_CUSTOM(warning, i) << "Waiting for miners join";
+      while (minerThreads[i].joinable()) {
+        boost::this_thread::sleep(boost::posix_time::milliseconds(100));
+      };
+    }
     delete[] minerThreads;
     minerThreads = nullptr;
     delete[] minerThreadActive;

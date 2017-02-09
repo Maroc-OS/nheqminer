@@ -95,7 +95,7 @@ public:
   bool *minerThreadActive;
 
   ZcashMiner(const std::vector<ISolver *> &i_solvers);
-  ~ZcashMiner();
+  virtual ~ZcashMiner();
 
   std::string userAgent();
   void start();

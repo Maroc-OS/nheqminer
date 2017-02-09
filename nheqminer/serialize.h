@@ -718,6 +718,15 @@ void Serialize_impl(Stream &os, const std::vector<T, A> &v, int nType,
     os.write((char *)&v[0], v.size() * sizeof(T));
 }
 
+#if !defined (__clang__)
+template <typename Stream, typename T, typename A, typename V>
+void Serialize_impl(Stream &os, const std::vector<T, A> &v, int nType, int nVersion,
+                    const V &) {
+  WriteCompactSize(os, v.size());
+  for (typename std::vector<T, A>::const_iterator vi = v.begin(); vi != v.end();
+      ::Serialize(os, (*vi), nType, nVersion);
+}
+#else
 template <typename Stream, typename T, typename A, typename V>
 void Serialize_impl(Stream &os, std::vector<T, A> &v, int nType, int nVersion,
                     const V &) {
@@ -725,16 +734,8 @@ void Serialize_impl(Stream &os, std::vector<T, A> &v, int nType, int nVersion,
   for (typename std::vector<T, A>::iterator vi = v.cbegin(); vi != v.cend();
        ++vi)
     ::Serialize(os, (*vi), nType, nVersion);
-  // std::cout << *os << std::endl;
-
-  /*for (typename std::vector<T, A>::iterator vis = v.begin(); vis != v.end();
-     ++vis)
-      v.push_back(vis);
-      std::cout << vis << "vis:" << std::endl;
-
-      std::cout << v << "v:" << std::endl;
-      ::Serialize(os, v, nType, nVersion);*/
 }
+#endif
 
 template <typename Stream, typename T, typename A>
 inline void Serialize(Stream &os, const std::vector<T, A> &v, int nType,

@@ -60,8 +60,7 @@ namespace keywords = boost::log::keywords;
 // #2 mingw compilation for windows (faster?)
 // #3 benchmark accuracy fix: first wait for solvers to init and then measure
 // speed
-// #4 Linux fix cmake to generate all in one binary (just like Windows)
-// #5 after #4 is done add solver chooser for CPU and CUDA devices (general and
+// #4 add solver chooser for CPU and CUDA devices (general and
 // per device), example: [-s 0 automatic, -s 1 solver1, -s 2 solver2, ...]
 
 int use_avx = 0;
@@ -273,18 +272,19 @@ int main(int argc, char *argv[]) {
   }
 
   std::cout << std::endl;
-  std::cout << "\t==================== www.nicehash.com ===================="
+  std::cout << "\t=========================================================="
             << std::endl;
-  std::cout
-      << "\t\tEquihash CPU&GPU Miner for NiceHash v" STANDALONE_MINER_VERSION
-      << std::endl;
+  std::cout << "\t\t\t  Equihash CPU & GPU Miner v" STANDALONE_MINER_VERSION
+            << std::endl;
   std::cout << "\tThanks to Zcash developers for providing base of the code."
             << std::endl;
-  std::cout
-      << "\t    Special thanks to tromp, xenoncat and djeZo for providing "
-      << std::endl;
-  std::cout << "\t      optimized CPU and CUDA equihash solvers." << std::endl;
-  std::cout << "\t==================== www.nicehash.com ===================="
+  std::cout << "\t   Special thanks to nicehash, tromp, xenoncat, mbevand, "
+            << std::endl;
+  std::cout << "\t maztheman, tpruvot, krnlx and eXtremal-ik7 for providing "
+            << std::endl;
+  std::cout << "\t        optimized CPU and CUDA equihash solvers."
+            << std::endl;
+  std::cout << "\t=========================================================="
             << std::endl;
   std::cout << std::endl;
 
@@ -474,7 +474,7 @@ int main(int argc, char *argv[]) {
     _MinerFactory =
         new MinerFactory(use_avx == 1, use_old_cuda == 0, use_old_xmp == 0);
     if (!benchmark) {
-      if (user.length() == 0) {
+      if (!user.length()) {
         BOOST_LOG_TRIVIAL(error)
             << "Invalid address. Use -u to specify your address.";
         return 0;

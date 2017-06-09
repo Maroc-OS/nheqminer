@@ -1,5 +1,5 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2013 The Bitcoin Core developers
+// Copyright (c) 2009-2016 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -8,6 +8,7 @@
 
 #include "crypto/ripemd160.h"
 #include "crypto/sha256.h"
+#include "prevector.h"
 #include "serialize.h"
 #include "uint256.h"
 #include "version.h"
@@ -125,21 +126,29 @@ inline uint160 Hash160(const std::vector<unsigned char> &vch) {
   return Hash160(vch.begin(), vch.end());
 }
 
+/** Compute the 160-bit hash of a vector. */
+template <unsigned int N>
+inline uint160 Hash160(const prevector<N, unsigned char> &vch) {
+  return Hash160(vch.begin(), vch.end());
+}
+
 /** A writer stream (for serialization) that computes a 256-bit hash. */
 class CHashWriter {
 private:
   CHash256 ctx;
 
-public:
-  int nType;
-  int nVersion;
+  const int nType;
+  const int nVersion;
 
+public:
   CHashWriter(int nTypeIn, int nVersionIn)
       : nType(nTypeIn), nVersion(nVersionIn) {}
 
-  CHashWriter &write(const char *pch, size_t size) {
+  int GetType() const { return nType; }
+  int GetVersion() const { return nVersion; }
+
+  void write(const char *pch, size_t size) {
     ctx.Write((const unsigned char *)pch, size);
-    return (*this);
   }
 
   // invalidates the object
@@ -171,5 +180,40 @@ unsigned int MurmurHash3(unsigned int nHashSeed,
 void BIP32Hash(const ChainCode &chainCode, unsigned int nChild,
                unsigned char header, const unsigned char data[32],
                unsigned char output[64]);
+
+/** SipHash-2-4 */
+class CSipHasher {
+private:
+  uint64_t v[4];
+  uint64_t tmp;
+  int count;
+
+public:
+  /** Construct a SipHash calculator initialized with 128-bit key (k0, k1) */
+  CSipHasher(uint64_t k0, uint64_t k1);
+  /** Hash a 64-bit integer worth of data
+   *  It is treated as if this was the little-endian interpretation of 8 bytes.
+   *  This function can only be used when a multiple of 8 bytes have been
+   * written so far.
+   */
+  CSipHasher &Write(uint64_t data);
+  /** Hash arbitrary bytes. */
+  CSipHasher &Write(const unsigned char *data, size_t size);
+  /** Compute the 64-bit SipHash-2-4 of the data written so far. The object
+   * remains untouched. */
+  uint64_t Finalize() const;
+};
+
+/** Optimized SipHash-2-4 implementation for uint256.
+ *
+ *  It is identical to:
+ *    SipHasher(k0, k1)
+ *      .Write(val.GetUint64(0))
+ *      .Write(val.GetUint64(1))
+ *      .Write(val.GetUint64(2))
+ *      .Write(val.GetUint64(3))
+ *      .Finalize()
+ */
+uint64_t SipHashUint256(uint64_t k0, uint64_t k1, const uint256 &val);
 
 #endif // BITCOIN_HASH_H
